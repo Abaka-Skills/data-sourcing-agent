@@ -1,9 +1,12 @@
-# Abaka Medical-Data Vendor Sourcing Workflow
+# Abaka Vendor Sourcing Workflow
 
 An agentic workflow (Claude Code skills + a small local Python toolkit) that runs
-the vendor-sourcing SOP end to end, with a single **Google Sheet as the source of
-truth**. Everything talks to Google directly over the official APIs — no
-third-party SaaS sits in the data path for HIPAA-adjacent vendor correspondence.
+the data-vendor sourcing SOP end to end, with a single **Google Sheet as the
+source of truth**. It is **domain-agnostic** — the same pipeline sources vendors
+for any data type (medical, robotics/egocentric video, audio, CCTV/surveillance,
+…); each domain gets its own tracker. Everything talks to Google directly over the
+official APIs, so no third-party SaaS sits in the data path for sensitive vendor
+correspondence.
 
 ## What it does (SOP → skills)
 
@@ -29,7 +32,7 @@ Run **/setup** and it walks you through everything. In short:
 2. In Google Cloud Console: create a project → enable **Google Sheets API** + **Gmail API** → OAuth consent screen **Internal** (for the `abaka.ai` Workspace) → create an **OAuth Desktop client** → download the JSON to `~/.abaka/credentials.json`.
 3. `python3 tools/config.py set-profile name="..." role="..." company="Abaka AI" email="you@abaka.ai"`
 4. `python3 tools/auth.py --login` (one browser consent; token cached at `~/.abaka/token.json`)
-5. `python3 scripts/setup_sheet.py --create "Abaka Medical Data Sourcing"`
+5. `python3 scripts/setup_sheet.py --create "Abaka Data Sourcing"`  (creates the default `medical` tracker; pass `--tracker <name>` for others)
 6. `python3 tools/sheets.py --selftest` and `python3 tools/gmail.py --selftest`
 
 ## The Google Sheet

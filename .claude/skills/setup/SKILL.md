@@ -1,6 +1,6 @@
 ---
 name: setup
-description: One-time setup for the medical-data sourcing workflow — install dependencies, connect Google (Sheets + Gmail) via OAuth, capture the user's outreach identity, and create the tracker spreadsheet. Idempotent. Use the first time, or when the user says "set up the sourcing workflow" or hits an auth/credentials error.
+description: One-time setup for the data-vendor sourcing workflow — install dependencies, connect Google (Sheets + Gmail) via OAuth, capture the user's outreach identity, and create the tracker spreadsheet. Idempotent. Use the first time, or when the user says "set up the sourcing workflow" or hits an auth/credentials error.
 ---
 
 # Setup (one-time, idempotent)
@@ -44,7 +44,7 @@ python3 tools/auth.py --check
 
 ## 5. Create the tracker spreadsheet
 ```bash
-python3 scripts/setup_sheet.py --create "Abaka Medical Data Sourcing"
+python3 scripts/setup_sheet.py --create "Abaka Data Sourcing"
 ```
 This creates the **Projects**, **Vendor Tracker**, and hidden **Config** tabs with headers + dropdowns, registers the tracker in `~/.abaka/config.json`, and prints the URL. (If the user already has a sheet, use `--ensure <sheet_id>` instead.)
 

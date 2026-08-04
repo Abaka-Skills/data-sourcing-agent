@@ -6,7 +6,7 @@ domain's headers, dropdown validation, a frozen bold header row, and a hidden
 Config tab. Registers the tracker in ~/.abaka/config.json.
 
 Usage:
-  python3 scripts/setup_sheet.py --create "Abaka Medical Data Sourcing"                       # medical (default)
+  python3 scripts/setup_sheet.py --create "Abaka Data Sourcing"                                # default (medical) tracker
   python3 scripts/setup_sheet.py --create --tracker robotics "Abaka Robotics Egocentric Sourcing"
   python3 scripts/setup_sheet.py --ensure <sheet_id> --tracker robotics --domain robotics_egocentric
   python3 scripts/setup_sheet.py                     # ensure the active tracker's sheet
