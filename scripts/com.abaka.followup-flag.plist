@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>com.abaka.followup-flag</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Library/Frameworks/Python.framework/Versions/3.13/bin/python3</string>
+		<string>/Users/guanlinwu/Desktop/Files/Playground/Data Sourcing/tools/followups.py</string>
+		<string>flag</string>
+		<string>--all-trackers</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string>/Users/guanlinwu/.abaka/followup-flag.log</string>
+	<key>StandardOutPath</key>
+	<string>/Users/guanlinwu/.abaka/followup-flag.log</string>
+	<key>StartCalendarInterval</key>
+	<dict>
+		<key>Hour</key>
+		<integer>8</integer>
+		<key>Minute</key>
+		<integer>0</integer>
+	</dict>
+	<key>WorkingDirectory</key>
+	<string>/Users/guanlinwu/Desktop/Files/Playground/Data Sourcing</string>
+</dict>
+</plist>

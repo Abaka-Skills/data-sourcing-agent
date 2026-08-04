@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# macOS
+.DS_Store
+
+# Secrets & local state — MUST NEVER be committed.
+# All credentials live in ~/.abaka/ (outside this repo) by design; these are
+# defensive in case anyone copies them in.
+.abaka/
+credentials.json
+token.json
+apollo.json
+profile.json
+config.json
+*.credentials.json
+.env
+.env.*
+
+# Scratch / local outputs
+scratchpad/
+*.log
