@@ -7,6 +7,12 @@ description: Send follow-up emails to vendors who haven't replied (SOP step 4b).
 
 Follow-ups are **human-triggered** — the user has checked their inbox and wants to nudge non-responders. Your invocation is the approval, so send automatically (no separate send confirmation), but respect the reply guardrail and the max-3 warning. Commands run from the project root.
 
+## Backend: Lark project? Use larksource
+For a **Lark project** (`P01`…`P09`), use **`tools/larksource.py`** (it wraps gmail.py itself):
+- who's due: `python3 tools/larksource.py outreach-list <P> --due` — Outreached, ≥5 days since last contact, < 3 follow-ups (same rule as the Google `followups.py suggestions`). Present them, confirm which to nudge.
+- send one: `python3 tools/larksource.py followup-send <P> "<exact vendor name>"` — resolves the Gmail thread from the vendor's Contact email, sends a templated in-thread nudge, `+1` Follow-up count, stamps Last contact date. **Reply guardrail:** if they already replied it does NOT send, returns `{"action":"skipped-replied"}` and flips the row to In Contact — tell the user. `{"at_max":true}` = hit the 3-follow-up cap. To personalize, pipe a body: `echo "<text>" | python3 tools/larksource.py followup-send <P> "<vendor>"`. Add `--force` only if the user insists on nudging someone who replied.
+Report exactly as in step 3.
+
 **Tracker:** default is `medical`. For a project in another tracker (e.g. `robotics`), prefix `followups.py`/`sheets.py` commands with `ABAKA_TRACKER=<tracker>` (see `python3 tools/config.py trackers`).
 
 ## 1. Determine targets

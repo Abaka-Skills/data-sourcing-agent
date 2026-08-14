@@ -7,6 +7,18 @@ description: Find data vendors that fit a sourcing project (SOP step 2), for any
 
 Populate the **Vendor Tracker** for a project. **Re-check known vendors first, then discover new ones.** Commands run from the project root. Prefix commands with `ABAKA_TRACKER=<T>` (default `medical`, use `robotics` for egocentric video). Take `<P-ID>` from the user.
 
+## Backend: Google Sheet vs Lark Base
+Two backends exist. **Pick by where the project lives:**
+- **Lark project** (id looks like `P01`…`P09` / `P03-Robo-AppliedIntuition`; the live system): use **`tools/larksource.py`** — vendors are written straight into that project's own table (P0X, with its Vendor/Tracking/Samples/Documents views). No Vendor ID / Engagement ID / Project ID column — the table *is* the project. Commands:
+  - `python3 tools/larksource.py project <P>` — the intake scope to match (replaces `sheets.py get-project`).
+  - `python3 tools/larksource.py vendors <P>` — existing rows for re-check/dedup (replaces step 2's `sourcing.py existing`).
+  - `echo '{...}' | python3 tools/larksource.py add-vendor <P>` — dedup (by name/website domain) + upsert one vendor (replaces the `upsert-vendor` block in step 5). Defaults Status=Identified, Active/Inactive=Active.
+  - Still use `tools/domains.py show` for the rubric and `tools/sourcing.py classify` for scoring (both backend-agnostic). Skip the Vendor ID/Engagement ID `next-id` calls entirely.
+  - Field keys map automatically (`Vendor name`→Vendor, `Fit rationale`→Notes, `Environments`→Environments Supported, Priority High/Med/Low→S/A/B, etc.).
+- **Google Sheet project** (id looks like `P-06`): use `tools/sheets.py` as written below.
+
+The scoring, dedup, gating-question and origin-exclusion logic is identical for both — only the read/write tool changes.
+
 ## 1. Load scope + domain rubric + ROW MODEL
 - `ABAKA_TRACKER=<T> python3 tools/sheets.py get-project <P-ID>` — the scope to match.
 - `ABAKA_TRACKER=<T> python3 tools/domains.py show` — gives the fit **gates + dimensions** (use these exact keys when scoring) and the vendor columns.

@@ -7,6 +7,13 @@ description: Draft personalized vendor outreach emails as Gmail drafts (SOP step
 
 Create one **Gmail draft** per identified vendor. This step **never sends** — it only drafts. Commands run from the project root; prefix with `ABAKA_TRACKER=<T>` for the project's tracker (default `medical`, `robotics` for egocentric). Take `<P-ID>` from the user.
 
+## Backend: Lark project? Use larksource
+If the project is a **Lark project** (id `P01`…`P09` / `P03-Robo-AppliedIntuition`), the vendor rows live in that project's own P0X table — use **`tools/larksource.py`** instead of `sheets.py`. `gmail.py` and `domains.py` are unchanged (account-wide / backend-agnostic). Mapping:
+- scope: `python3 tools/larksource.py project <P>`
+- vendors to draft: `python3 tools/larksource.py outreach-list <P> --status Identified` (a `no-email` mark = skip per step 3; a `✉draft` mark = already drafted).
+- after `gmail.py create-draft`, record it: `echo '{"Vendor":"<exact vendor name>","Draft/email link":"<draft_id>","Latest update":"draft ready"}' | python3 tools/larksource.py update-vendor <P>` (targets the row by Vendor name; Status stays Identified).
+Everything else (identity preflight, composition, review handoff) is identical.
+
 ## 1. Preflight (identity required)
 `python3 tools/config.py show` — confirm `profile` has name/role/company/email. If not, tell the user to run **/setup** (or `python3 tools/config.py set-profile name="..." role="..." company="..." email="..."`) and stop. The email is signed from this identity.
 
