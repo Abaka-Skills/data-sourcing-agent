@@ -70,11 +70,18 @@ def _weburl(v) -> str:
     return v or ""
 
 
+# Aggregator / directory domains: many DIFFERENT vendors share these, so a
+# domain match here is NOT a same-vendor signal — dedup by name only.
+AGGREGATOR_DOMAINS = {"datarade.ai", "linkedin.com", "crunchbase.com", "github.com",
+                      "huggingface.co", "kaggle.com", "facebook.com", "twitter.com", "x.com"}
+
+
 def _domain(v) -> str:
     url = _weburl(v)
     m = re.search(r"https?://([^/]+)", url)
     host = (m.group(1) if m else url).lower().lstrip("www.")
-    return host.split("/")[0]
+    host = host.split("/")[0]
+    return "" if host in AGGREGATOR_DOMAINS else host
 
 
 def vendors(p: str) -> list[dict]:

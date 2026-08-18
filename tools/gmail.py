@@ -37,10 +37,37 @@ def _from_header() -> str | None:
     return email or None
 
 
-def _build_raw(to: str, subject: str, body: str, *, in_reply_to: str | None = None,
-               references: str | None = None) -> str:
+# Always-CC list — every outbound draft/send copies these. Override per-call with
+# cc=..., or set "cc_always" in ~/.abaka/profile.json.
+DEFAULT_CC = ["tonixu@abaka.ai", "wzh@abaka.ai", "tomtang@abaka.ai"]
+
+_CC_SENTINEL = object()
+
+
+def _cc_list(cc) -> list[str]:
+    if cc is _CC_SENTINEL:                       # not specified -> use the default
+        try:
+            import json as _json, pathlib as _pl
+            p = _pl.Path.home() / ".abaka" / "profile.json"
+            if p.exists():
+                v = _json.loads(p.read_text()).get("cc_always")
+                if v:
+                    return v if isinstance(v, list) else [x.strip() for x in str(v).split(",") if x.strip()]
+        except Exception:
+            pass
+        return list(DEFAULT_CC)
+    if not cc:
+        return []
+    return cc if isinstance(cc, list) else [x.strip() for x in str(cc).split(",") if x.strip()]
+
+
+def _build_raw(to: str, subject: str, body: str, *, cc=_CC_SENTINEL,
+               in_reply_to: str | None = None, references: str | None = None) -> str:
     msg = MIMEText(body, "plain", "utf-8")
     msg["To"] = to
+    cc_list = _cc_list(cc)
+    if cc_list:
+        msg["Cc"] = ", ".join(cc_list)
     msg["Subject"] = subject
     frm = _from_header()
     if frm:
@@ -55,13 +82,19 @@ def _ids(sent: dict) -> dict:
     return {"message_id": sent.get("id"), "thread_id": sent.get("threadId")}
 
 
-def create_draft(to: str, subject: str, body: str, thread_id: str | None = None) -> dict:
+def create_draft(to: str, subject: str, body: str, thread_id: str | None = None,
+                 cc=_CC_SENTINEL) -> dict:
     svc = _service()
-    message = {"raw": _build_raw(to, subject, body)}
+    message = {"raw": _build_raw(to, subject, body, cc=cc)}
     if thread_id:
         message["threadId"] = thread_id
     draft = svc.users().drafts().create(userId="me", body={"message": message}).execute()
     return {"draft_id": draft["id"], **_ids(draft.get("message", {}))}
+
+
+def delete_draft(draft_id: str) -> dict:
+    _service().users().drafts().delete(userId="me", id=draft_id).execute()
+    return {"deleted": draft_id}
 
 
 def send_draft(draft_id: str) -> dict:
