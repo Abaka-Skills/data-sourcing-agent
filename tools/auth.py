@@ -40,30 +40,33 @@ def _load_libs():
     return Request, Credentials, InstalledAppFlow, build
 
 
-def get_credentials(*, interactive: bool = True):
+def get_credentials(*, token_path=None, interactive: bool = True):
     """Return valid OAuth credentials, refreshing or running the flow as needed.
 
+    token_path lets multiple sender accounts each keep their own cached token
+    (defaults to config.TOKEN_PATH = the primary abaka.ai mailbox).
     interactive=False raises instead of opening a browser (used by any headless
     entry point) so a missing/expired token fails loudly rather than hanging.
     """
     Request, Credentials, InstalledAppFlow, _ = _load_libs()
     config.ensure_dir()
+    token_path = token_path or config.TOKEN_PATH
     creds = None
-    if config.TOKEN_PATH.exists():
-        creds = Credentials.from_authorized_user_file(str(config.TOKEN_PATH), SCOPES)
+    if token_path.exists():
+        creds = Credentials.from_authorized_user_file(str(token_path), SCOPES)
 
     if creds and creds.valid:
         return creds
 
     if creds and creds.expired and creds.refresh_token:
         creds.refresh(Request())
-        config.TOKEN_PATH.write_text(creds.to_json())
+        token_path.write_text(creds.to_json())
         return creds
 
     if not interactive:
         raise SystemExit(
-            "error: no valid cached token and interactive login disabled. "
-            "Run  python3 tools/auth.py --login  first."
+            f"error: no valid cached token at {token_path} and interactive login "
+            "disabled. Run the account's login first."
         )
 
     if not config.CREDENTIALS_PATH.exists():
@@ -76,7 +79,7 @@ def get_credentials(*, interactive: bool = True):
 
     flow = InstalledAppFlow.from_client_secrets_file(str(config.CREDENTIALS_PATH), SCOPES)
     creds = flow.run_local_server(port=0)
-    config.TOKEN_PATH.write_text(creds.to_json())
+    token_path.write_text(creds.to_json())
     return creds
 
 
@@ -93,10 +96,12 @@ def sheets_service(*, interactive: bool = True):
     return build("sheets", "v4", credentials=get_credentials(interactive=interactive))
 
 
-def gmail_service(*, interactive: bool = True):
-    """Gmail API v1 service (drafts, send, threads)."""
+def gmail_service(*, token_path=None, interactive: bool = True):
+    """Gmail API v1 service (drafts, send, threads). token_path selects which
+    sender mailbox (defaults to the primary abaka.ai token)."""
     _, _, _, build = _load_libs()
-    return build("gmail", "v1", credentials=get_credentials(interactive=interactive))
+    return build("gmail", "v1",
+                 credentials=get_credentials(token_path=token_path, interactive=interactive))
 
 
 # --------------------------------------------------------------------------- #

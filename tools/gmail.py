@@ -25,13 +25,29 @@ import auth
 import config
 
 
-def _service(*, interactive: bool = True):
-    return auth.gmail_service(interactive=interactive)
+# Sender mailboxes for rotation. Each non-primary account keeps its own cached
+# OAuth token (~/.abaka/token_<label>.json); authorize with `gmail.py auth-account`.
+SEND_ACCOUNTS = {
+    "ai": "yulingl@abaka.ai",
+    "team": "yulingl@abaka.team",
+    "business": "yulingl@abaka.business",
+}
 
 
-def _from_header() -> str | None:
+def _token_path(account: str = "ai"):
+    if account == "ai":
+        return config.TOKEN_PATH
+    return config.TOKEN_PATH.with_name(f"token_{account}.json")
+
+
+def _service(*, account: str = "ai", interactive: bool = True):
+    return auth.gmail_service(token_path=_token_path(account), interactive=interactive)
+
+
+def _from_header(account: str = "ai") -> str | None:
     prof = config.load_profile()
-    name, email = prof.get("name"), prof.get("email")
+    name = prof.get("name")
+    email = SEND_ACCOUNTS.get(account) or prof.get("email")
     if name and email:
         return f"{name} <{email}>"
     return email or None
@@ -61,7 +77,7 @@ def _cc_list(cc) -> list[str]:
     return cc if isinstance(cc, list) else [x.strip() for x in str(cc).split(",") if x.strip()]
 
 
-def _build_raw(to: str, subject: str, body: str, *, cc=_CC_SENTINEL,
+def _build_raw(to: str, subject: str, body: str, *, cc=_CC_SENTINEL, account: str = "ai",
                in_reply_to: str | None = None, references: str | None = None) -> str:
     msg = MIMEText(body, "plain", "utf-8")
     msg["To"] = to
@@ -69,7 +85,7 @@ def _build_raw(to: str, subject: str, body: str, *, cc=_CC_SENTINEL,
     if cc_list:
         msg["Cc"] = ", ".join(cc_list)
     msg["Subject"] = subject
-    frm = _from_header()
+    frm = _from_header(account)
     if frm:
         msg["From"] = frm
     if in_reply_to:
@@ -103,11 +119,12 @@ def send_draft(draft_id: str) -> dict:
     return {"draft_id": draft_id, **_ids(sent)}
 
 
-def send_new(to: str, subject: str, body: str) -> dict:
-    svc = _service()
+def send_new(to: str, subject: str, body: str, *, cc=_CC_SENTINEL, account: str = "ai") -> dict:
+    """Compose + send a fresh email from `account` (rotate across SEND_ACCOUNTS)."""
+    svc = _service(account=account)
     sent = svc.users().messages().send(
-        userId="me", body={"raw": _build_raw(to, subject, body)}).execute()
-    return _ids(sent)
+        userId="me", body={"raw": _build_raw(to, subject, body, cc=cc, account=account)}).execute()
+    return {**_ids(sent), "account": SEND_ACCOUNTS.get(account, account)}
 
 
 def _thread_meta(thread_id: str) -> dict:
@@ -235,6 +252,24 @@ def _main(argv: list[str]) -> int:
     cmd, rest = argv[0], argv[1:]
     if cmd == "--selftest":
         return _selftest()
+    if cmd == "auth-account":
+        label = rest[0] if rest else ""
+        if label not in SEND_ACCOUNTS:
+            sys.exit(f"unknown account {label!r}; known: {list(SEND_ACCOUNTS)}")
+        print(f"Opening a browser — sign in as {SEND_ACCOUNTS[label]} and approve.")
+        svc = _service(account=label, interactive=True)
+        me = svc.users().getProfile(userId="me").execute().get("emailAddress")
+        if me.lower() != SEND_ACCOUNTS[label].lower():
+            print(f"⚠️  authorized {me}, but expected {SEND_ACCOUNTS[label]} — "
+                  f"re-run and sign in as the right account.")
+        else:
+            print(f"ok: {label} authorized as {me} (token: {_token_path(label)})")
+        return 0
+    if cmd == "accounts":
+        for label, email in SEND_ACCOUNTS.items():
+            ok = _token_path(label).exists()
+            print(f"  {label:10} {email:26} {'authorized' if ok else 'NOT authorized'}")
+        return 0
     o = _opts(rest)
     if cmd == "create-draft":
         print(json.dumps(create_draft(o["to"], o["subject"], sys.stdin.read(),

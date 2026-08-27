@@ -7,6 +7,10 @@ description: Find data vendors that fit a sourcing project (SOP step 2), for any
 
 Populate the **Vendor Tracker** for a project. **Re-check known vendors first, then discover new ones.** Commands run from the project root. Prefix commands with `ABAKA_TRACKER=<T>` (default `medical`, use `robotics` for egocentric video). Take `<P-ID>` from the user.
 
+## STANDING RULES (always apply)
+1. **No very large / generic giants (大厂).** Prefer smaller & mid-size specialists. By default EXCLUDE the big generalist data-services giants unless the user explicitly asks for them — e.g. Appen, TELUS International, Sama, iMerit, TaskUs, Innodata, CloudFactory, Scale AI, Defined.ai, and other household-name / public data-services companies. Flag any borderline "big" candidate rather than silently including it.
+2. **Check who's already been contacted first — across ALL projects, not just this one.** Before sourcing, scan every project table (`python3 -c "import sys; sys.path.insert(0,'tools'); import lark; print(lark.project_tables())"`, then read each) and build the set of existing vendor names + their Status. DEDUP against it: never re-source or re-email a vendor already in the pipeline (Identified / Outreached / In Contact / Collaborating / Rejected). Tell the user which relevant vendors are already in-flight and in which project. (`larksource.py add-vendor` dedups within one project table; this rule extends it to cross-project.)
+
 ## Backend: Google Sheet vs Lark Base
 Two backends exist. **Pick by where the project lives:**
 - **Lark project** (id looks like `P01`…`P09` / `P03-Robo-AppliedIntuition`; the live system): use **`tools/larksource.py`** — vendors are written straight into that project's own table (P0X, with its Vendor/Tracking/Samples/Documents views). No Vendor ID / Engagement ID / Project ID column — the table *is* the project. Commands:
