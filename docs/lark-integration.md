@@ -73,11 +73,25 @@ that is Gmail-internal and never leaves Gmail, so a recipient can never echo it
 back. Switching `track.py` to try `Message-ID` first, then falling back to
 address, is a small change with no schema cost now that the column exists.
 
-**Open question — who owns reply tracking.** `Radar-agent` does the same job
-against Lark Mail over IMAP, but writes to its own Base, whereas `track.py`
-writes the per-project tables (P01…P09) here. They are not interchangeable
-destinations, so this is a conversation to have rather than a deletion to make.
-Until it is settled, both run — and both should use the same matching key.
+**Reply tracking has moved to `Radar-agent`** (owner: Andrew). `tools/track.py`
+and `tools/track_cron.sh` are removed here: two agents matching the same replies
+and writing status produce conflicting records and no shared audit trail.
+
+What that means in practice:
+
+- **This repo keeps everything up to and including the send** — discovery,
+  scoring, briefing, drafting, outreach, follow-ups.
+- **The Radar owns everything after it** — reply matching, status, artifacts,
+  audit, and the tracking record itself, in its own Base.
+- The Radar does **not** depend on this repo writing anything. It watches the
+  Sent folder and creates its own engagement rows from outbound mail, so
+  outreach sent from here is tracked with no coordination.
+- The per-project tables (P01…P09) here remain the sourcing longlist. They are
+  no longer the tracking record; status lives in the Radar's Base.
+
+`rfc_message_id` (above) is still worth recording on send. It is not required —
+the Radar reads the same header from the mailbox — but recording it makes the
+link explicit rather than inferred, and costs one field.
 
 ## Daily summary + weekly report
 - **Daily:** cron → read Base → status counts + due follow-ups → bot posts to the group `chat_id` via `im:message`.
