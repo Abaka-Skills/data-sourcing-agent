@@ -58,6 +58,27 @@ Exact **Mail** and **Docs** scope IDs vary by console/edition — match to what 
 1. **Poll first (robust):** cron reads the user mailbox, matches sender → vendor record → Status `In Contact`, clear follow-up flag. Reuse `followups.py` logic.
 2. **Event-driven (later):** configure Event Subscription callback (or long-connection/WebSocket) + subscribe the mail-received event → update Base per reply. Only if Mail events are available on the plan.
 
+### Matching key — prefer Message-ID over sender address
+
+`track.py` matches a reply by sender address. That misses the common cases: a
+vendor replying from a different address than the one stored, or replying to a
+colleague rather than the sender. Measured against a real mailbox, RFC-822
+`Message-ID` matched 9/9 vendor replies including both of those; address
+matching missed them, and a paired 7-day inactivity rule then flips responsive
+vendors to Inactive.
+
+`gmail.py:_ids()` now returns `rfc_message_id` alongside the existing ids, and
+`send-outreach` records it on the vendor row. Note it is **not** `sent["id"]` —
+that is Gmail-internal and never leaves Gmail, so a recipient can never echo it
+back. Switching `track.py` to try `Message-ID` first, then falling back to
+address, is a small change with no schema cost now that the column exists.
+
+**Open question — who owns reply tracking.** `Radar-agent` does the same job
+against Lark Mail over IMAP, but writes to its own Base, whereas `track.py`
+writes the per-project tables (P01…P09) here. They are not interchangeable
+destinations, so this is a conversation to have rather than a deletion to make.
+Until it is settled, both run — and both should use the same matching key.
+
 ## Daily summary + weekly report
 - **Daily:** cron → read Base → status counts + due follow-ups → bot posts to the group `chat_id` via `im:message`.
 - **Weekly:** aggregate the week's status changes → create a Lark Doc (`docx:document`) or post to chat.

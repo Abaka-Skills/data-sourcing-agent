@@ -67,7 +67,7 @@ MEDICAL_VENDOR_HEADERS = [
     "Data type/modalities offered", "Disease/therapeutic focus", "Data origin",
     "Scale", "Fit", "Fit rationale", "De-identified?", "Commercial rights-clean?",
     "Pricing", "Date identified", "Contact name", "Contact email",
-    "Contact role", "Status", "Last contact date", "Follow-up count",
+    "Contact role", "Message-ID", "Status", "Last contact date", "Follow-up count",
     "Follow-up Action", "Draft/email link", "Meeting notes",
 ]
 
@@ -162,7 +162,7 @@ ROBO_VENDOR_HEADERS = [
     "Modalities offered", "Sensor specs", "Volume", "Embodiment",
     "Annotation", "Format/schema", "Fit", "Fit rationale", "License class",
     "Commercial+AI rights", "Consent/privacy", "Origin", "Pricing",
-    "Date identified", "Contact name", "Contact email", "Contact role", "Status",
+    "Date identified", "Contact name", "Contact email", "Contact role", "Message-ID", "Status",
     "Last contact date", "Follow-up count", "Follow-up Action",
     "Draft/email link", "Meeting notes", "Last updated",
 ]

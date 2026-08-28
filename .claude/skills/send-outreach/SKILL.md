@@ -10,7 +10,7 @@ Send the drafts the user approves. **This is the human-in-the-loop send gate —
 ## Backend: Lark project? Use larksource
 For a **Lark project** (`P01`…`P09`), read/write through **`tools/larksource.py`** (`gmail.py` unchanged). Mapping:
 - ready to send: `python3 tools/larksource.py outreach-list <P> --status Identified` — rows with a `✉draft` mark (non-empty Draft/email link) are drafted & ready. Use the `Draft/email link` value as the `<draft_id>`.
-- after `gmail.py send-draft <draft_id>`, record the send: `echo '{"Vendor":"<exact vendor name>","Status":"Outreached","Last contact date":"today","Follow-up count":0}' | python3 tools/larksource.py update-vendor <P>` ("today" is auto-stamped). This moves the row into the project's **Tracking** view; replies later flip it to In Contact automatically (tracking agent).
+- after `gmail.py send-draft <draft_id>`, record the send — **including `rfc_message_id` from its output**, which is what reply-matching keys on: `echo '{"Vendor":"<exact vendor name>","Message-ID":"<rfc_message_id>","Status":"Outreached","Last contact date":"today","Follow-up count":0}' | python3 tools/larksource.py update-vendor <P>` ("today" is auto-stamped). This moves the row into the project's **Tracking** view; replies later flip it to In Contact automatically (tracking agent).
 The mandatory review gate (step 2) is unchanged — still confirm the exact send list with the user first.
 
 **Tracker:** default is `medical`. If this project lives in another tracker (e.g. `robotics`), prefix every `sheets.py`/`sourcing.py` command below with `ABAKA_TRACKER=<tracker>` (see `python3 tools/config.py trackers`). `gmail.py` is account-wide and needs no prefix.

@@ -78,8 +78,32 @@ def _build_raw(to: str, subject: str, body: str, *, cc=_CC_SENTINEL,
     return base64.urlsafe_b64encode(msg.as_bytes()).decode()
 
 
+def rfc_message_id(gmail_id: str) -> str:
+    """The RFC-822 Message-ID header of a message we sent.
+
+    NOT the same as Gmail's `id`. Gmail's id is internal to Gmail; the
+    recipient's client has never seen it and cannot echo it back. The RFC-822
+    header is what returns in the reply's In-Reply-To/References, so it is the
+    only id that survives the hop out of our infrastructure — and therefore the
+    only one a reply can be matched on deterministically.
+
+    Returns "" if it cannot be read; callers should treat that as "no
+    deterministic match key", never as a failed send.
+    """
+    try:
+        msg = _service().users().messages().get(
+            userId="me", id=gmail_id, format="metadata",
+            metadataHeaders=["Message-ID"]).execute()
+        return _header(msg, "Message-ID") or ""
+    except Exception:
+        return ""
+
+
 def _ids(sent: dict) -> dict:
-    return {"message_id": sent.get("id"), "thread_id": sent.get("threadId")}
+    gid = sent.get("id")
+    return {"message_id": gid,                       # Gmail-internal, unchanged
+            "thread_id": sent.get("threadId"),
+            "rfc_message_id": rfc_message_id(gid) if gid else ""}
 
 
 def create_draft(to: str, subject: str, body: str, thread_id: str | None = None,
